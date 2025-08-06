@@ -73,6 +73,14 @@ class Camera:
             name = "Unknown"
             max_confidence = 0
             
+            # Fix face_region data type and range for OpenCV
+            if face_region.dtype != 'uint8':
+                # Convert from float (0-1) to uint8 (0-255)
+                if face_region.max() <= 1.0:
+                    face_region = (face_region * 255).astype('uint8')
+                else:
+                    face_region = face_region.astype('uint8')
+            
             temp_path = 'temp_camera_face.jpg'
             cv2.imwrite(temp_path, cv2.cvtColor(face_region, cv2.COLOR_RGB2BGR))
             

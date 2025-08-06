@@ -3,124 +3,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Face Scan - Facial Recognition System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .scan-form {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .preview-image {
-            max-width: 300px;
-            max-height: 300px;
-            margin: 20px 0;
-            border-radius: 5px;
-            display: none;
-        }
-        .result-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
-        .confidence-bar {
-            height: 20px;
-            border-radius: 10px;
-            background: #e9ecef;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        .confidence-level {
-            height: 100%;
-            background: #0d6efd;
-            transition: width 0.3s ease;
-        }
-        .nav-link {
-            color: #495057;
-            font-weight: 500;
-        }
-        .nav-link:hover {
-            color: #0d6efd;
-        }
-        .scanned-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-    </style>
+    <title>Scan Face - Face Recognition System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/">Face Recognition System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Live Feed</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/register">Register Face</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/scan">Manual Scan</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logs">Logs</a>
-                    </li>
-                </ul>
+<body class="bg-gray-50 min-h-screen" x-data="scanForm()">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-camera text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-xl font-semibold text-gray-900">Face Recognition System</h1>
+                        <p class="text-sm text-gray-500">Enterprise Edition</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </a>
+                    <a href="/register" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                    <a href="/scan" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-search mr-2"></i>Scan
+                    </a>
+                    <a href="/logs" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-list mr-2"></i>Logs
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="scan-form">
-                    <h2 class="mb-4">Manual Face Scan</h2>
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Upload Image to Scan</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*" required
-                                   onchange="previewImage(this);">
-                        </div>
-                        <img id="preview" class="preview-image" alt="Preview">
-                        <button type="submit" class="btn btn-primary">Scan Face</button>
-                    </form>
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Upload Section -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-search mr-3 text-blue-600"></i>
+                        Scan Face
+                    </h2>
+                    <p class="text-gray-600 mb-6">Upload an image to recognize faces in the system</p>
 
-                    {% if result %}
-                    <div class="result-card">
-                        <h4>Scan Results</h4>
-                        <img src="{{ url_for('static', filename=result.image_path.replace('static/', '')) }}" class="scanned-image" alt="Scanned face">
-                        <p class="mb-2">Detected Person: <strong>{{ result.name }}</strong></p>
-                        <p class="mb-2">Confidence Score: <strong>{{ "%.2f"|format(result.confidence * 100) }}%</strong></p>
-                        <div class="confidence-bar">
-                           <!--<div class="confidence-level" style="width: { '%.2f'|format(result.confidence * 100) }%"></div>--> 
+                    <!-- Upload Area -->
+                    <div 
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors"
+                        :class="{ 'border-blue-500 bg-blue-50': isDragOver }"
+                        @dragover.prevent="isDragOver = true"
+                        @dragleave.prevent="isDragOver = false"
+                        @drop.prevent="handleFileDrop($event)"
+                    >
+                        <div x-show="!selectedFile" class="space-y-4">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                            <div>
+                                <p class="text-lg font-medium text-gray-700">Upload an image</p>
+                                <p class="text-sm text-gray-500">Drag and drop an image here, or click to browse</p>
+                            </div>
+                            <button 
+                                type="button"
+                                @click="$refs.fileInput.click()"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                <i class="fas fa-folder-open mr-2"></i>
+                                Browse Files
+                            </button>
+                        </div>
+                        
+                        <!-- File Preview -->
+                        <div x-show="selectedFile" class="space-y-4">
+                            <div class="w-32 h-32 mx-auto rounded-lg overflow-hidden bg-gray-100">
+                                <img 
+                                    x-show="imagePreview" 
+                                    :src="imagePreview" 
+                                    alt="Preview" 
+                                    class="w-full h-full object-cover"
+                                >
+                                <div x-show="!imagePreview" class="w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-image text-3xl text-gray-400"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-700" x-text="selectedFile?.name"></p>
+                                <p class="text-xs text-gray-500" x-text="formatFileSize(selectedFile?.size)"></p>
+                            </div>
+                            <button 
+                                type="button"
+                                @click="removeFile()"
+                                class="inline-flex items-center px-3 py-1 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                                <i class="fas fa-trash mr-1"></i>
+                                Remove
+                            </button>
                         </div>
                     </div>
-                    {% endif %}
+                    
+                    <!-- Hidden file input -->
+                    <input 
+                        type="file" 
+                        ref="fileInput"
+                        @change="handleFileSelect($event)"
+                        accept="image/*"
+                        class="hidden"
+                    >
+                    
+                    <!-- Scan Button -->
+                    <div class="mt-6">
+                        <button 
+                            @click="scanFace()"
+                            :disabled="!selectedFile || isScanning"
+                            class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <div x-show="isScanning" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                            <i x-show="!isScanning" class="fas fa-search mr-3"></i>
+                            <span x-text="isScanning ? 'Scanning...' : 'Scan Face'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Batch Upload -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-layer-group mr-2 text-purple-600"></i>
+                        Batch Processing
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-4">Upload multiple images for batch recognition</p>
+                    
+                    <div class="space-y-4">
+                        <div 
+                            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors"
+                            @dragover.prevent
+                            @drop.prevent="handleBatchDrop($event)"
+                        >
+                            <i class="fas fa-images text-2xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-600">Drop multiple images here</p>
+                        </div>
+                        
+                        <div x-show="batchFiles.length > 0" class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">Selected Files:</span>
+                                <span class="text-sm text-gray-500" x-text="batchFiles.length + ' files'"></span>
+                            </div>
+                            <div class="max-h-32 overflow-y-auto space-y-1">
+                                <template x-for="(file, index) in batchFiles" :key="index">
+                                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                        <span class="text-sm text-gray-700" x-text="file.name"></span>
+                                        <button 
+                                            @click="removeBatchFile(index)"
+                                            class="text-red-500 hover:text-red-700"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <button 
+                                @click="processBatch()"
+                                :disabled="batchFiles.length === 0 || isBatchProcessing"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <div x-show="isBatchProcessing" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                <span x-text="isBatchProcessing ? 'Processing...' : 'Process Batch'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="space-y-6">
+                <!-- Single Scan Result -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-user-check mr-2 text-green-600"></i>
+                        Recognition Result
+                    </h3>
+                    
+                    <div x-show="scanResult" x-transition class="space-y-4">
+                        <div class="text-center">
+                            <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
+                                <img x-show="scanResult.image" :src="scanResult.image" alt="Scanned Face" class="w-full h-full object-cover">
+                                <div x-show="!scanResult.image" class="w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-user text-3xl text-gray-400"></i>
+                                </div>
+                            </div>
+                            
+                            <h4 class="text-xl font-semibold text-gray-900" x-text="scanResult.name || 'Unknown'">Unknown</h4>
+                            <p class="text-sm text-gray-500" x-text="scanResult.timestamp || ''"></p>
+                            
+                            <div class="mt-4">
+                                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                    <span>Confidence</span>
+                                    <span x-text="(scanResult.confidence * 100).toFixed(1) + '%'">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-600 h-2 rounded-full transition-all duration-300" :style="'width: ' + (scanResult.confidence * 100) + '%'"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Processing Time:</span>
+                                    <p class="font-medium" x-text="(scanResult.processing_time || 0).toFixed(2) + 's'">0.00s</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Quality Score:</span>
+                                    <p class="font-medium" x-text="(scanResult.quality_score || 0).toFixed(2)">0.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div x-show="!scanResult" class="text-center text-gray-500 py-8">
+                        <i class="fas fa-search text-4xl mb-4"></i>
+                        <p>No scan results yet</p>
+                        <p class="text-sm">Upload an image and click "Scan Face" to get started</p>
+                    </div>
+                </div>
+
+                <!-- Batch Results -->
+                <div x-show="batchResults.length > 0" class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-list mr-2 text-blue-600"></i>
+                        Batch Results
+                    </h3>
+                    
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+                        <template x-for="(result, index) in batchResults" :key="index">
+                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                                    <img x-show="result.image" :src="result.image" alt="Face" class="w-full h-full object-cover">
+                                    <div x-show="!result.image" class="w-full h-full flex items-center justify-center">
+                                        <i class="fas fa-user text-sm text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900" x-text="result.name || 'Unknown'">Unknown</p>
+                                    <p class="text-xs text-gray-500" x-text="result.filename">image.jpg</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs font-medium" :class="result.confidence > 0.8 ? 'text-green-600' : 'text-yellow-600'" x-text="(result.confidence * 100).toFixed(0) + '%'">0%</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Total Processed:</span>
+                            <span class="font-medium" x-text="batchResults.length"></span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Success Rate:</span>
+                            <span class="font-medium" x-text="getSuccessRate() + '%'">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Scans -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-history mr-2 text-gray-600"></i>
+                        Recent Scans
+                    </h3>
+                    
+                    <div class="space-y-2 max-h-48 overflow-y-auto">
+                        <template x-for="scan in recentScans" :key="scan.id">
+                            <div class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                                <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+                                    <img x-show="scan.image" :src="scan.image" alt="Face" class="w-full h-full object-cover">
+                                    <div x-show="!scan.image" class="w-full h-full flex items-center justify-center">
+                                        <i class="fas fa-user text-xs text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900" x-text="scan.name">Unknown</p>
+                                    <p class="text-xs text-gray-500" x-text="scan.timestamp">Just now</p>
+                                </div>
+                                <span class="text-xs font-medium" :class="scan.confidence > 0.8 ? 'text-green-600' : 'text-yellow-600'" x-text="(scan.confidence * 100).toFixed(0) + '%'">0%</span>
+                            </div>
+                        </template>
+                        <div x-show="recentScans.length === 0" class="text-center text-gray-500 py-4">
+                            <i class="fas fa-inbox text-2xl mb-2"></i>
+                            <p class="text-sm">No recent scans</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function previewImage(input) {
-            const preview = document.getElementById('preview');
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
+        function scanForm() {
+            return {
+                selectedFile: null,
+                imagePreview: null,
+                isDragOver: false,
+                isScanning: false,
+                scanResult: null,
+                batchFiles: [],
+                isBatchProcessing: false,
+                batchResults: [],
+                recentScans: [],
+                
+                handleFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.processFile(file);
+                    }
+                },
+                
+                handleFileDrop(event) {
+                    this.isDragOver = false;
+                    const file = event.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        this.processFile(file);
+                    }
+                },
+                
+                handleBatchDrop(event) {
+                    const files = Array.from(event.dataTransfer.files);
+                    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+                    this.batchFiles.push(...imageFiles);
+                },
+                
+                processFile(file) {
+                    if (!file.type.startsWith('image/')) {
+                        alert('Please select an image file');
+                        return;
+                    }
+                    
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('File size must be less than 10MB');
+                        return;
+                    }
+                    
+                    this.selectedFile = file;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.imagePreview = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                },
+                
+                formatFileSize(bytes) {
+                    if (!bytes) return '';
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+                    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+                },
+                
+                removeFile() {
+                    this.selectedFile = null;
+                    this.imagePreview = null;
+                    this.$refs.fileInput.value = '';
+                },
+                
+                removeBatchFile(index) {
+                    this.batchFiles.splice(index, 1);
+                },
+                
+                async scanFace() {
+                    if (!this.selectedFile) return;
+                    
+                    this.isScanning = true;
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('face_image', this.selectedFile);
+                        
+                        const response = await fetch('/api/v1/faces/recognize', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            this.scanResult = {
+                                name: result.name,
+                                confidence: result.confidence,
+                                processing_time: result.processing_time,
+                                quality_score: result.quality_score,
+                                timestamp: new Date().toLocaleTimeString(),
+                                image: this.imagePreview
+                            };
+                            
+                            // Add to recent scans
+                            this.recentScans.unshift({
+                                id: Date.now(),
+                                name: result.name,
+                                confidence: result.confidence,
+                                timestamp: 'Just now',
+                                image: this.imagePreview
+                            });
+                            
+                            // Keep only last 10 scans
+                            if (this.recentScans.length > 10) {
+                                this.recentScans = this.recentScans.slice(0, 10);
+                            }
+                        } else {
+                            this.scanResult = {
+                                name: 'Unknown',
+                                confidence: 0,
+                                processing_time: 0,
+                                quality_score: 0,
+                                timestamp: new Date().toLocaleTimeString(),
+                                image: this.imagePreview
+                            };
+                        }
+                    } catch (error) {
+                        console.error('Error scanning face:', error);
+                        alert('Scan failed. Please try again.');
+                    } finally {
+                        this.isScanning = false;
+                    }
+                },
+                
+                async processBatch() {
+                    if (this.batchFiles.length === 0) return;
+                    
+                    this.isBatchProcessing = true;
+                    this.batchResults = [];
+                    
+                    for (const file of this.batchFiles) {
+                        try {
+                            const formData = new FormData();
+                            formData.append('face_image', file);
+                            
+                            const response = await fetch('/api/v1/faces/recognize', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            const result = await response.json();
+                            
+                            this.batchResults.push({
+                                name: result.success ? result.name : 'Unknown',
+                                confidence: result.success ? result.confidence : 0,
+                                filename: file.name,
+                                success: result.success
+                            });
+                        } catch (error) {
+                            this.batchResults.push({
+                                name: 'Error',
+                                confidence: 0,
+                                filename: file.name,
+                                success: false
+                            });
+                        }
+                    }
+                    
+                    this.isBatchProcessing = false;
+                },
+                
+                getSuccessRate() {
+                    if (this.batchResults.length === 0) return 0;
+                    const successful = this.batchResults.filter(r => r.success).length;
+                    return Math.round((successful / this.batchResults.length) * 100);
                 }
-                reader.readAsDataURL(input.files[0]);
             }
         }
     </script>

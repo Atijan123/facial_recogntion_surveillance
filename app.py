@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, Response, jsonify, redirect, url_for
-from models import db, User, Log
+from models import db, User, RecognitionLog as Log
 from camera import Camera
 from recognizer import FaceRecognizer
 from werkzeug.utils import secure_filename
@@ -129,6 +129,74 @@ def logs():
         
     logs = query.order_by(Log.timestamp.desc()).all()
     return render_template('logs.html', logs=logs, search=search)
+
+@app.route('/api/v1/stats')
+def api_stats():
+    """API endpoint for dashboard stats."""
+    total_users = User.query.count()
+    total_logs = Log.query.count()
+    recent_logs = Log.query.order_by(Log.timestamp.desc()).limit(5).all()
+    
+    return jsonify({
+        'total_users': total_users,
+        'total_recognitions': total_logs,
+        'recent_activity': len(recent_logs)
+    })
+
+@app.route('/api/v1/logs')
+def api_logs():
+    """API endpoint for recent logs."""
+    limit = request.args.get('limit', 10, type=int)
+    logs = Log.query.order_by(Log.timestamp.desc()).limit(limit).all()
+    
+    logs_data = []
+    for log in logs:
+        logs_data.append({
+            'id': log.id,
+            'name': log.name,
+            'confidence': log.confidence,
+            'timestamp': log.timestamp.isoformat(),
+            'snapshot_path': log.snapshot_path
+        })
+    
+    return jsonify(logs_data)
+
+@app.route('/api/v1/faces/register', methods=['POST'])
+def api_register_face():
+    """API endpoint for face registration."""
+    try:
+        if 'face' not in request.files:
+            return jsonify({'error': 'No file uploaded', 'success': False}), 400
+            
+        file = request.files['face']
+        name = request.form.get('name')
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected', 'success': False}), 400
+            
+        if not name:
+            return jsonify({'error': 'Name is required', 'success': False}), 400
+            
+        if name and file:
+            filename = secure_filename(f"{name}.jpg")
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            if recognizer.register_face(filepath, name):
+                user = User(name=name, image_path=filepath)
+                db.session.add(user)
+                db.session.commit()
+                return jsonify({
+                    'success': True, 
+                    'message': f'Face registered successfully for {name}',
+                    'user_id': user.id
+                })
+            else:
+                os.remove(filepath)
+                return jsonify({'error': 'Face registration failed', 'success': False}), 400
+                
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port = 5000)

@@ -3,141 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detection Logs - Facial Recognition System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Detection Logs - Face Recognition System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .logs-container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .search-form {
-            margin-bottom: 30px;
-        }
-        .log-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 5px;
-        }
-        .table th {
-            background-color: #f8f9fa;
-        }
-        .nav-link {
-            color: #495057;
-            font-weight: 500;
-        }
-        .nav-link:hover {
-            color: #0d6efd;
-        }
-        .timestamp {
-            white-space: nowrap;
-        }
-        .unknown-face {
-            color: #dc3545;
-            font-weight: 500;
-        }
-        .known-face {
-            color: #198754;
-            font-weight: 500;
-        }
         .confidence-bar {
-            height: 6px;
-            background-color: #e9ecef;
-            border-radius: 3px;
-            margin-top: 5px;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
             overflow: hidden;
+            margin-top: 8px;
         }
         .confidence-level {
             height: 100%;
-            background-color: #0d6efd;
+            background: linear-gradient(90deg, #10b981, #059669);
             transition: width 0.3s ease;
         }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/">Face Recognition System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Live Feed</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/register">Register Face</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/scan">Manual Scan</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/logs">Logs</a>
-                    </li>
-                </ul>
+<body class="bg-gray-50 min-h-screen" x-data="logsPage()">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-camera text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-xl font-semibold text-gray-900">Face Recognition System</h1>
+                        <p class="text-sm text-gray-500">Enterprise Edition</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </a>
+                    <a href="/register" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                    <a href="/scan" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-search mr-2"></i>Scan
+                    </a>
+                    <a href="/logs" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-list mr-2"></i>Logs
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="logs-container">
-            <h2 class="mb-4">Detection Logs</h2>
+        <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <i class="fas fa-list mr-3 text-blue-600"></i>
+                    Detection Logs
+                </h2>
+                <p class="text-gray-600 mt-2">View and search through face recognition detection history</p>
+            </div>
             
-            <form class="search-form" method="GET">
-                <div class="input-group">
-                    <input type="text" class="form-control" name="search" placeholder="Search by name..." value="{{ search }}">
-                    <button class="btn btn-primary" type="submit">Search</button>
-                </div>
-            </form>
+            <!-- Search Form -->
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <form method="GET" class="flex gap-3">
+                    <div class="flex-1">
+                        <input type="text" 
+                               name="search" 
+                               placeholder="Search by name..." 
+                               value="{{ search }}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center">
+                        <i class="fas fa-search mr-2"></i>Search
+                    </button>
+                </form>
+            </div>
 
             {% if logs %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+            <!-- Logs Table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th>ID</th>
-                            <th>Snapshot</th>
-                            <th>Name</th>
-                            <th>Confidence</th>
-                            <th>Timestamp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white divide-y divide-gray-200">
                         {% for log in logs %}
-                        <tr>
-                            <td>{{ log.id }}</td>
-                            <td>
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if log.snapshot_path %}
                                 <img src="{{ url_for('static', filename=log.snapshot_path.replace('static/', '')) }}" 
-                                     class="log-image" alt="Detection snapshot">
-                            </td>
-                            <td>
-                                {% if log.name == 'Unknown' %}
-                                <span class="unknown-face">{{ log.name }}</span>
+                                     alt="Detection snapshot" 
+                                     class="w-16 h-16 object-cover rounded-lg shadow-sm">
                                 {% else %}
-                                <span class="known-face">{{ log.name }}</span>
+                                <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                </div>
                                 {% endif %}
                             </td>
-                            <td>
-                                <div>{{ "%.2f"|format(log.confidence * 100) }}%</div>
-                                <div class="confidence-bar">
-                                    <!--<div class="confidence-level" style="width: {{ log.confidence * 100 }}%"></div>-->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if log.name == 'Unknown' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-question-circle mr-1"></i>
+                                    {{ log.name }}
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-user-check mr-1"></i>
+                                    {{ log.name }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium text-gray-900">{{ "%.1f" | format(log.confidence * 100) }}%</span>
+                                    <div class="ml-3 w-16 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div class="confidence-level" style="width: {{ (log.confidence * 100) }}%"></div>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="timestamp">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex flex-col">
+                                    <span>{{ log.timestamp.strftime('%Y-%m-%d') }}</span>
+                                    <span class="text-xs text-gray-400">{{ log.timestamp.strftime('%H:%M:%S') }}</span>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <div class="alert alert-info">No logs found.</div>
+            <!-- Empty State -->
+            <div class="px-6 py-12 text-center">
+                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No logs found</h3>
+                <p class="text-gray-500">
+                    {% if search %}
+                        No detection logs match your search "{{ search }}".
+                    {% else %}
+                        No detection logs available yet. Start using the face recognition system to see logs here.
+                    {% endif %}
+                </p>
+                {% if search %}
+                <a href="/logs" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition duration-200">
+                    Clear search
+                </a>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function logsPage() {
+            return {
+                init() {
+                    console.log('Logs page initialized');
+                }
+            }
+        }
+    </script>
 </body>
 </html>

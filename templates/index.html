@@ -3,104 +3,359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facial Recognition System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Face Recognition System - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .video-container {
             position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        .video-feed {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .detection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        .detection-info {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
-        .nav-link {
-            color: #495057;
-            font-weight: 500;
-        }
-        .nav-link:hover {
-            color: #0d6efd;
+        .detection-overlay.active {
+            opacity: 1;
         }
         .confidence-bar {
-            height: 20px;
-            border-radius: 10px;
-            background: #e9ecef;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
             overflow: hidden;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         .confidence-level {
             height: 100%;
-            background: #0d6efd;
+            background: linear-gradient(90deg, #10b981, #059669);
             transition: width 0.3s ease;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/">Face Recognition System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/">Live Feed</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/register">Register Face</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/scan">Manual Scan</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logs">Logs</a>
-                    </li>
-                </ul>
+<body class="bg-gray-50 min-h-screen" x-data="dashboard()">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-camera text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-xl font-semibold text-gray-900">Face Recognition System</h1>
+                        <p class="text-sm text-gray-500">Enterprise Edition</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </a>
+                    <a href="/register" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                    <a href="/scan" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-search mr-2"></i>Scan
+                    </a>
+                    <a href="/logs" class="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-list mr-2"></i>Logs
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-8">
-                <div class="video-container mb-4">
-                    <img src="{{ url_for('video_feed') }}" class="video-feed" alt="Video Feed">
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Users</p>
+                        <p class="text-2xl font-semibold text-gray-900" x-text="stats.total_users || 0">0</p>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="detection-info">
-                    <h4 class="mb-3">Detection Information</h4>
-                    <div id="detectionData">
-                        <p>Waiting for detections...</p>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Recognitions Today</p>
+                        <p class="text-2xl font-semibold text-gray-900" x-text="stats.today_recognitions || 0">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <i class="fas fa-percentage text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Success Rate</p>
+                        <p class="text-2xl font-semibold text-gray-900" x-text="(stats.success_rate * 100).toFixed(1) + '%' || '0%'">0%</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-clock text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Avg Response Time</p>
+                        <p class="text-2xl font-semibold text-gray-900" x-text="(stats.avg_response_time || 0).toFixed(2) + 's'">0.00s</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Feed Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Video Feed -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-video mr-2 text-blue-600"></i>
+                            Live Recognition Feed
+                        </h2>
+                        <p class="text-sm text-gray-500 mt-1">Real-time face detection and recognition</p>
+                    </div>
+                    <div class="video-container">
+                        <img src="/video_feed" alt="Live Video Feed" class="w-full h-auto">
+                        <div class="detection-overlay" :class="{ 'active': isDetecting }">
+                            <div class="bg-white rounded-lg p-4 shadow-lg">
+                                <div class="flex items-center">
+                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                                    <span class="text-gray-700">Processing...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recognition Panel -->
+            <div class="space-y-6">
+                <!-- Current Detection -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-user-check mr-2 text-green-600"></i>
+                        Current Detection
+                    </h3>
+                    <div x-show="currentDetection" x-transition>
+                        <div class="text-center">
+                            <div class="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
+                                <img x-show="currentDetection.image" :src="currentDetection.image" alt="Detected Face" class="w-full h-full object-cover">
+                                <div x-show="!currentDetection.image" class="w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-user text-3xl text-gray-400"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-semibold text-gray-900" x-text="currentDetection.name || 'Unknown'">Unknown</h4>
+                            <p class="text-sm text-gray-500" x-text="currentDetection.timestamp || ''"></p>
+                            
+                            <div class="mt-4">
+                                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                    <span>Confidence</span>
+                                    <span x-text="(currentDetection.confidence * 100).toFixed(1) + '%'">0%</span>
+                                </div>
+                                <div class="confidence-bar">
+                                    <div class="confidence-level" :style="'width: ' + (currentDetection.confidence * 100) + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div x-show="!currentDetection" class="text-center text-gray-500">
+                        <i class="fas fa-user-slash text-4xl mb-2"></i>
+                        <p>No face detected</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-history mr-2 text-blue-600"></i>
+                        Recent Activity
+                    </h3>
+                    <div class="space-y-3">
+                        <template x-for="activity in recentActivity" :key="activity.id">
+                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                                    <img x-show="activity.image" :src="activity.image" alt="Face" class="w-full h-full object-cover">
+                                    <div x-show="!activity.image" class="w-full h-full flex items-center justify-center">
+                                        <i class="fas fa-user text-sm text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900" x-text="activity.name">Unknown</p>
+                                    <p class="text-xs text-gray-500" x-text="activity.timestamp">Just now</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs font-medium" :class="activity.confidence > 0.8 ? 'text-green-600' : 'text-yellow-600'" x-text="(activity.confidence * 100).toFixed(0) + '%'">0%</span>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="recentActivity.length === 0" class="text-center text-gray-500 py-4">
+                            <i class="fas fa-inbox text-2xl mb-2"></i>
+                            <p class="text-sm">No recent activity</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Status -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-server mr-2 text-purple-600"></i>
+                        System Status
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Camera</span>
+                            <span class="flex items-center">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2 pulse"></div>
+                                <span class="text-sm font-medium text-green-600">Online</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Recognition Model</span>
+                            <span class="flex items-center">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                <span class="text-sm font-medium text-green-600">Active</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Database</span>
+                            <span class="flex items-center">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                <span class="text-sm font-medium text-green-600">Connected</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Cache</span>
+                            <span class="flex items-center">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                <span class="text-sm font-medium text-green-600">Enabled</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-      {% if result %}
-                    <div class="result-card">
-                        <h4>Scan Results</h4>
-                        <img src="{{ url_for('static', filename=result.image_path.replace('static/', '')) }}" class="scanned-image" alt="Scanned face">
-                        <p class="mb-2">Detected Person: <strong>{{ result.name }}</strong></p>
-                        <p class="mb-2">Confidence Score: <strong>{{ "%.2f"|format(result.confidence * 100) }}%</strong></p>
-                        <div class="confidence-bar">
-                           <!--<div class="confidence-level" style="width: { '%.2f'|format(result.confidence * 100) }%"></div>--> 
-                        </div>
-                    </div>
-                    {% endif %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function dashboard() {
+            return {
+                stats: {},
+                currentDetection: null,
+                recentActivity: [],
+                isDetecting: false,
+                
+                init() {
+                    this.loadStats();
+                    this.loadRecentActivity();
+                    
+                    // Refresh stats every 30 seconds
+                    setInterval(() => {
+                        this.loadStats();
+                        this.loadRecentActivity();
+                    }, 30000);
+                },
+                
+                async loadStats() {
+                    try {
+                        const response = await fetch('/api/v1/stats');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.stats = data.stats;
+                        }
+                    } catch (error) {
+                        console.error('Error loading stats:', error);
+                    }
+                },
+                
+                async loadRecentActivity() {
+                    try {
+                        const response = await fetch('/api/v1/logs?limit=5');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.recentActivity = data.logs.map(log => ({
+                                ...log,
+                                timestamp: this.formatTimestamp(log.timestamp)
+                            }));
+                        }
+                    } catch (error) {
+                        console.error('Error loading recent activity:', error);
+                    }
+                },
+                
+                formatTimestamp(timestamp) {
+                    const date = new Date(timestamp);
+                    const now = new Date();
+                    const diff = now - date;
+                    
+                    if (diff < 60000) return 'Just now';
+                    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+                    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+                    return date.toLocaleDateString();
+                },
+                
+                simulateDetection() {
+                    // Simulate face detection for demo purposes
+                    this.isDetecting = true;
+                    setTimeout(() => {
+                        this.currentDetection = {
+                            name: 'John Doe',
+                            confidence: 0.95,
+                            timestamp: new Date().toLocaleTimeString(),
+                            image: null
+                        };
+                        this.isDetecting = false;
+                        
+                        // Add to recent activity
+                        this.recentActivity.unshift({
+                            id: Date.now(),
+                            name: 'John Doe',
+                            confidence: 0.95,
+                            timestamp: 'Just now',
+                            image: null
+                        });
+                        
+                        // Keep only last 5 activities
+                        if (this.recentActivity.length > 5) {
+                            this.recentActivity = this.recentActivity.slice(0, 5);
+                        }
+                    }, 2000);
+                }
+            }
+        }
+    </script>
 </body>
 </html>
