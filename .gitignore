@@ -1,0 +1,15 @@
+venv/
+venv_new/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.dll
+*.so
+*.dylib
+*.exe
+*.lib
+*.DS_Store
+*.log
+database.db
+.env
