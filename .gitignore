@@ -13,3 +13,5 @@ __pycache__/
 *.log
 database.db
 .env
+venv/
+venv_new/
