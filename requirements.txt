@@ -18,10 +18,10 @@ passlib[bcrypt]
 python-dotenv
 
 # Computer Vision & ML
-deepface
-opencv-python
+deepface==0.0.79
+opencv-python==4.8.0.76
 numpy
-tensorflow
+tensorflow==2.10.1
 Pillow
 retina-face
 
