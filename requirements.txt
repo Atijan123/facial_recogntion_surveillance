@@ -1,4 +1,4 @@
-setuptools>=68.0.0
+setuptools>=65
 wheel
 
 # Core Framework
@@ -18,12 +18,13 @@ passlib[bcrypt]
 python-dotenv
 
 # Computer Vision & ML
-deepface
-opencv-python
-numpy
-tensorflow
-Pillow
-retina-face
+deepface==0.0.79
+opencv-python==4.8.0.76
+numpy==1.24.3
+tensorflow==2.10.1
+Pillow==10.0.0
+retina-face==0.0.13
+gunicorn
 
 # Utilities
 python-dateutil
