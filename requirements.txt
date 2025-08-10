@@ -2,43 +2,43 @@ setuptools>=68.0.0
 wheel
 
 # Core Framework
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-python-multipart==0.0.6
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
 
 # Database
-sqlalchemy==2.0.23
-alembic==1.13.1
-redis==5.0.1
+sqlalchemy
+alembic
+redis
 
 # Authentication & Security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-dotenv==1.0.0
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
 
 # Computer Vision & ML
-deepface==0.0.84
-opencv-python==4.8.0.76
-numpy==1.24.3
-tensorflow==2.13.0
-Pillow==10.0.0
-retina-face==0.0.13
+deepface
+opencv-python
+numpy
+tensorflow
+Pillow
+retina-face
 
 # Utilities
-python-dateutil==2.8.2
-pandas==2.3.0
-joblib==1.5.1
+python-dateutil
+pandas
+joblib
 
 # Development & Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-httpx==0.25.2
+pytest
+pytest-asyncio
+httpx
 
 # Logging & Monitoring
-structlog==23.2.0
-prometheus-client==0.19.0
+structlog
+prometheus-client
 
 # CORS
-fastapi-cors==0.0.6
+fastapi-cors
 
